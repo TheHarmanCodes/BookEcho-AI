@@ -1,87 +1,44 @@
-"use client";
+import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { IBM_Plex_Serif, Mona_Sans } from "next/font/google";
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import {
-  Show,
-  SignUpButton,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
-import { cn } from "@/lib/utils";
-import { Geist } from "next/font/google";
+import "./globals.css";
+import Navbar from "@/components/ui/Navbar";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const ibmPlexSerif = IBM_Plex_Serif({
+  variable: "--font-ibm-plex-serif",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
-const navItems = [
-  { label: "Library", href: "/" },
-  { label: "Add New", href: "/books/new" },
-];
+const monaSans = Mona_Sans({
+  variable: "--font-mona-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
 
-const Navbar = () => {
-  const pathName = usePathname();
-  const { user } = useUser();
-
-  return (
-    <header className="w-full fixed z-50 bg-(--bg-primary) border-b md:border-none">
-      <div className="wrapper h-15 md:navbar-height py-4 flex justify-between items-center">
-        <Link href="/" className="flex gap-0.5 items-center">
-          <Image
-            src="/assets/logo.png"
-            alt="Bookified"
-            width={42}
-            height={26}
-          />
-          <span className="logo-text">Bookified</span>
-        </Link>
-
-        <nav className="w-fit flex gap-7.5 items-center">
-          {navItems.map(({ label, href }) => {
-            const isActive =
-              pathName === href || (href !== "/" && pathName.startsWith(href));
-            return (
-              <Link
-                href={href}
-                key={label}
-                className={cn(
-                  "nav-link-base",
-                  isActive ? "nav-link-active" : "text-black hover:opacity-70",
-                )}
-              >
-                {label}
-              </Link>
-            );
-          })}
-          <div className="flex gap-7.5 items-center">
-            <Show when="signed-out">
-              <SignInButton mode="modal">
-                <button className="nav-link-base text-black hover:opacity-70">
-                  Sign In
-                </button>
-              </SignInButton>
-              {/* <SignUpButton mode="modal">
-              <button className="nav-link-base text-black hover:opacity-70">
-                Sign Up
-              </button>
-            </SignUpButton> */}
-            </Show>
-            <Show when="signed-in">
-              <div className="nav-user-link">
-                <UserButton />
-                {user?.firstName && (
-                  <Link href="/subscriptions" className="nav-user-name">
-                    {user.firstName}
-                  </Link>
-                )}
-              </div>
-            </Show>
-          </div>
-        </nav>
-      </div>
-    </header>
-  );
+export const metadata: Metadata = {
+  title: "BookEcho",
+  description:
+    "Talk to your books. Upload PDFs, and chat with your books using voice.",
 };
 
-export default Navbar;
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${ibmPlexSerif.variable} ${monaSans.variable} relative font-sans antialiased`}
+      >
+        <ClerkProvider>
+          <Navbar />
+          {children}
+        </ClerkProvider>
+      </body>
+    </html>
+  );
+}

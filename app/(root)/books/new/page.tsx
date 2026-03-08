@@ -1,7 +1,18 @@
-import React from "react";
+import UploadForm from "@/components/ui/UploadFrom";
 
-const page = () => {
-  return <div>page</div>;
+const Page = () => {
+  return (
+    <main className="new-book">
+      <section className="flex flex-col gap-1 text-center">
+        <h1 className="page-title-xl">Add a New Book</h1>
+        <p className="subtitle">
+          Upload a PDF to generate your interactive reading experience
+        </p>
+      </section>
+
+      <UploadForm />
+    </main>
+  );
 };
 
-export default page;
+export default Page;
