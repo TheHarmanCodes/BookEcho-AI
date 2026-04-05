@@ -1,3 +1,4 @@
+// this is just my constant static data, similar to my UAG PROJECT.     Modify in Production
 // Brand color - used in JS files where CSS variables aren't available
 export const BRAND_COLOR = "#212a3b"; // Dark blue-gray
 export const BRAND_COLOR_HOVER = "#3d485e"; // Medium blue-gray
