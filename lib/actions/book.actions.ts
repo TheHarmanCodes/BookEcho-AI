@@ -16,10 +16,10 @@ export const getAllBooks = async () => {
       data: serializeData(books),
     };
   } catch (err) {
-    console.error(`Error connecting to database`, err);
+    console.error(`Error fetching books`, err);
     return {
       success: false,
-      error: err,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 };
@@ -106,8 +106,7 @@ export const saveBookSegments = async (
     );
 
     await BookSegment.insertMany(segmentsToInsert);
-    await Book.findByIdAndUpdate(bookId, { totalSegment: segments.length });
-
+    await Book.findByIdAndUpdate(bookId, { totalSegments: segments.length });
     console.log("Book segments saved successfully");
     return {
       success: true,
@@ -117,11 +116,18 @@ export const saveBookSegments = async (
     console.error("Error saving book segments: " + err);
 
     // if we can't save the segment then we also have to delete the book and also partial segments that might be stored
-    await BookSegment.deleteMany({ bookId });
-    await Book.findByIdAndDelete(bookId);
-    console.log(
-      "Deleted book segments and book due to failure to save other segments.",
-    );
+    try {
+      await BookSegment.deleteMany({ bookId });
+      await Book.findByIdAndDelete(bookId);
+      console.log(
+        "Deleted book segments and book due to failure to save other segments.",
+      );
+    } catch (cleanupErr) {
+      console.error(
+        "Failed to cleanup after segment save failure:",
+        cleanupErr,
+      );
+    }
     return {
       success: false,
       error: err,

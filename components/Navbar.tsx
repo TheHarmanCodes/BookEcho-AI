@@ -21,7 +21,7 @@ const Navbar = () => {
         <Link href="/" className="flex gap-0.5 items-center">
           <Image
             src="/assets/logo.png"
-            alt="Bookified"
+            alt="BookEcho"
             width={58}
             height={57}
             className="brightness-100 contrast-100 mt-1"

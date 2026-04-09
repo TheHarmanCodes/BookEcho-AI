@@ -37,7 +37,7 @@ export const connectToDatabase = async () => {
   } catch (err) {
     cached.promise = null;
     console.error(
-      "MongoDb connection error. Please make sure MongoDb is running . " + err,
+      "MongoDB connection error. Please make sure MongoDB is running.",
     );
 
     throw err;

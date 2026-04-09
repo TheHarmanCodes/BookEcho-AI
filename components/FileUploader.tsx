@@ -60,8 +60,18 @@ const FileUploader = <T extends FieldValues>({
           className={cn(
             "upload-dropzone border-2 border-dashed border-[#8B7355]/20",
             isUploaded && "upload-dropzone-uploaded",
+            disabled && "opacity-50 cursor-not-allowed",
           )}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
           onClick={() => !disabled && inputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (!disabled && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          aria-disabled={disabled}
         >
           <input
             type="file"
@@ -81,6 +91,8 @@ const FileUploader = <T extends FieldValues>({
                 type="button"
                 onClick={onRemove}
                 className="upload-dropzone-remove mt-2"
+                disabled={disabled}
+                aria-label="Remove file"
               >
                 <X className="w-5 h-5" />
               </button>

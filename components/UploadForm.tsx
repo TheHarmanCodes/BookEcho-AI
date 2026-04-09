@@ -83,6 +83,7 @@ const UploadForm = () => {
         toast.error(
           "Failed to parse PDF. Please try again with a different file.",
         );
+        setIsSubmitting(false);
         return;
       }
 
@@ -135,7 +136,7 @@ const UploadForm = () => {
       if (book.alreadyExists) {
         toast.info("Book with same title already exists.");
         form.reset();
-        router.push(`/books/${existsCheck.book.slug}`);
+        router.push(`/books/${book.data.slug}`);
         return;
       }
 
@@ -147,7 +148,7 @@ const UploadForm = () => {
 
       if (!segment?.success) {
         toast.error("Failed to save book segments");
-        throw new Error("Failed to save book segments");
+        return;
       }
       form.reset();
       router.push("/");

@@ -25,8 +25,7 @@ const pdfFileSchema = z
 export const UploadSchema = z.object({
   pdfFile: pdfFileSchema,
   coverImage: z
-    .instanceof(File)
-    .optional()
+    .custom<File | undefined>((value) => value === undefined || isFile(value))
     .refine(
       (file) => !file || file.size <= MAX_IMAGE_SIZE,
       "Image size must be less than 10MB",
