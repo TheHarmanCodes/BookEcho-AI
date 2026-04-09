@@ -1,165 +1,166 @@
+import { TextSegment } from "@/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { DEFAULT_VOICE, voiceOptions } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// import { TextSegment } from '@/types';
-// import { clsx, type ClassValue } from 'clsx';
-// import { twMerge } from 'tailwind-merge';
-// import { DEFAULT_VOICE, voiceOptions } from './constants';
+// Serialize Mongoose documents to plain JSON objects (strips ObjectId, Date, etc...)
+export const serializeData = <T>(data: T): T =>
+  JSON.parse(JSON.stringify(data));
 
-// export function cn(...inputs: ClassValue[]) {
-//   return twMerge(clsx(inputs));
-// }
+// My Auto generate slug (similar to my uag project)
+export function generateSlug(text: string): string {
+  return text
+    .replace(/\.[^/.]+$/, "") // Remove file extension
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters (keep letters, numbers, spaces, hyphens)
+    .replace(/[\s_]+/g, "-") // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+}
 
-// // Serialize Mongoose documents to plain JSON objects (strips ObjectId, Date, etc.)
-// export const serializeData = <T>(data: T): T => JSON.parse(JSON.stringify(data));
+// Escape regex special characters to prevent ReDoS attacks
+export const escapeRegex = (str: string): string => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
 
-// // Auto generate slug
-// export function generateSlug(text: string): string {
-//   return text
-//       .replace(/\.[^/.]+$/, '') // Remove file extension (.pdf, .txt, etc.)
-//       .toLowerCase() // Convert to lowercase
-//       .trim() // Remove whitespace from both ends
-//       .replace(/[^\w\s-]/g, '') // Remove special characters (keep letters, numbers, spaces, hyphens)
-//       .replace(/[\s_]+/g, '-') // Replace spaces and underscores with hyphens
-//       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-// }
+// Splits text content into segments for MongoDB storage and search
+export const splitIntoSegments = (
+  text: string,
+  segmentSize: number = 500, // Maximum words per segment
+  overlapSize: number = 50, // Words to overlap between segments for context
+): TextSegment[] => {
+  // Validate parameters to prevent infinite loops
+  if (segmentSize <= 0) {
+    throw new Error("segmentSize must be greater than 0");
+  }
+  if (overlapSize < 0 || overlapSize >= segmentSize) {
+    throw new Error("overlapSize must be >= 0 and < segmentSize");
+  }
 
-// // Escape regex special characters to prevent ReDoS attacks
-// export const escapeRegex = (str: string): string => {
-//   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-// };
+  const words = text.split(/\s+/).filter((word) => word.length > 0);
+  const segments: TextSegment[] = [];
 
-// // Splits text content into segments for MongoDB storage and search
-// export const splitIntoSegments = (
-//     text: string,
-//     segmentSize: number = 500, // Maximum words per segment
-//     overlapSize: number = 50, // Words to overlap between segments for context
-// ): TextSegment[] => {
-//   // Validate parameters to prevent infinite loops
-//   if (segmentSize <= 0) {
-//     throw new Error('segmentSize must be greater than 0');
-//   }
-//   if (overlapSize < 0 || overlapSize >= segmentSize) {
-//     throw new Error('overlapSize must be >= 0 and < segmentSize');
-//   }
+  let segmentIndex = 0;
+  let startIndex = 0;
 
-//   const words = text.split(/\s+/).filter((word) => word.length > 0);
-//   const segments: TextSegment[] = [];
+  while (startIndex < words.length) {
+    const endIndex = Math.min(startIndex + segmentSize, words.length);
+    const segmentWords = words.slice(startIndex, endIndex);
+    const segmentText = segmentWords.join(" ");
 
-//   let segmentIndex = 0;
-//   let startIndex = 0;
+    segments.push({
+      text: segmentText,
+      segmentIndex,
+      wordCount: segmentWords.length,
+    });
 
-//   while (startIndex < words.length) {
-//     const endIndex = Math.min(startIndex + segmentSize, words.length);
-//     const segmentWords = words.slice(startIndex, endIndex);
-//     const segmentText = segmentWords.join(' ');
+    segmentIndex++;
 
-//     segments.push({
-//       text: segmentText,
-//       segmentIndex,
-//       wordCount: segmentWords.length,
-//     });
+    if (endIndex >= words.length) break;
+    startIndex = endIndex - overlapSize;
+  }
 
-//     segmentIndex++;
+  return segments;
+};
 
-//     if (endIndex >= words.length) break;
-//     startIndex = endIndex - overlapSize;
-//   }
+// Get voice data by persona key or voice ID
+export const getVoice = (persona?: string) => {
+  if (!persona) return voiceOptions[DEFAULT_VOICE];
 
-//   return segments;
-// };
+  // Find by voice ID
+  const voiceEntry = Object.values(voiceOptions).find((v) => v.id === persona);
+  if (voiceEntry) return voiceEntry;
 
-// // Get voice data by persona key or voice ID
-// export const getVoice = (persona?: string) => {
-//   if (!persona) return voiceOptions[DEFAULT_VOICE];
+  // Find by key
+  const voiceByKey = voiceOptions[persona as keyof typeof voiceOptions];
+  if (voiceByKey) return voiceByKey;
 
-//   // Find by voice ID
-//   const voiceEntry = Object.values(voiceOptions).find((v) => v.id === persona);
-//   if (voiceEntry) return voiceEntry;
+  // Default fallback
+  return voiceOptions[DEFAULT_VOICE];
+};
 
-//   // Find by key
-//   const voiceByKey = voiceOptions[persona as keyof typeof voiceOptions];
-//   if (voiceByKey) return voiceByKey;
+// Format duration in seconds to MM:SS format
+export const formatDuration = (seconds: number): string => {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
-//   // Default fallback
-//   return voiceOptions[DEFAULT_VOICE];
-// };
+export async function parsePDFFile(file: File) {
+  if (typeof window === "undefined") {
+    throw new Error("parsePDFFile can only be called in a browser environment");
+  }
+  try {
+    const pdfjsLib = await import("pdfjs-dist");
 
-// // Format duration in seconds to MM:SS format
-// export const formatDuration = (seconds: number): string => {
-//   const mins = Math.floor(seconds / 60);
-//   const secs = seconds % 60;
-//   return `${mins}:${secs.toString().padStart(2, '0')}`;
-// };
+    if (typeof window !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
+    }
 
-// export async function parsePDFFile(file: File) {
-//   try {
-//     const pdfjsLib = await import('pdfjs-dist');
+    // Read file as array buffer
+    const arrayBuffer = await file.arrayBuffer();
 
-//     if (typeof window !== 'undefined') {
-//       pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-//           'pdfjs-dist/build/pdf.worker.min.mjs',
-//           import.meta.url,
-//       ).toString();
-//     }
+    // Load PDF document
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdfDocument = await loadingTask.promise;
 
-//     // Read file as array buffer
-//     const arrayBuffer = await file.arrayBuffer();
+    // Render first page as cover image
+    const firstPage = await pdfDocument.getPage(1);
+    const viewport = firstPage.getViewport({ scale: 2 });
 
-//     // Load PDF document
-//     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-//     const pdfDocument = await loadingTask.promise;
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const context = canvas.getContext("2d");
 
-//     // Render first page as cover image
-//     const firstPage = await pdfDocument.getPage(1);
-//     const viewport = firstPage.getViewport({ scale: 2 }); // 2x scale for better quality
+    if (!context) {
+      throw new Error("Could not get canvas context");
+    }
 
-//     const canvas = document.createElement('canvas');
-//     canvas.width = viewport.width;
-//     canvas.height = viewport.height;
-//     const context = canvas.getContext('2d');
+    await firstPage.render({
+      canvas,
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
 
-//     if (!context) {
-//       throw new Error('Could not get canvas context');
-//     }
+    // Convert canvas to data URL
+    const coverDataURL = canvas.toDataURL("image/png");
 
-//     await firstPage.render({
-//       canvasContext: context,
-//       viewport: viewport,
-//     }).promise;
+    // Extract text from all pages
+    let fullText = "";
 
-//     // Convert canvas to data URL
-//     const coverDataURL = canvas.toDataURL('image/png');
+    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+      const page = await pdfDocument.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .filter((item) => "str" in item)
+        .map((item) => (item as { str: string }).str)
+        .join(" ");
+      fullText += pageText + "\n";
+    }
 
-//     // Extract text from all pages
-//     let fullText = '';
+    // Split text into segments for search
+    const segments = splitIntoSegments(fullText);
 
-//     for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-//       const page = await pdfDocument.getPage(pageNum);
-//       const textContent = await page.getTextContent();
-//       const pageText = textContent.items
-//           .filter((item) => 'str' in item)
-//           .map((item) => (item as { str: string }).str)
-//           .join(' ');
-//       fullText += pageText + '\n';
-//     }
+    // Clean up PDF document resources
+    await pdfDocument.destroy();
 
-//     // Split text into segments for search
-//     const segments = splitIntoSegments(fullText);
-
-//     // Clean up PDF document resources
-//     await pdfDocument.destroy();
-
-//     return {
-//       content: segments,
-//       cover: coverDataURL,
-//     };
-//   } catch (error) {
-//     console.error('Error parsing PDF:', error);
-//     throw new Error(`Failed to parse PDF file: ${error instanceof Error ? error.message : String(error)}`);
-//   }
-// }
+    return {
+      content: segments,
+      cover: coverDataURL,
+    };
+  } catch (error) {
+    console.error("Error parsing PDF:", error);
+    throw new Error(
+      `Failed to parse PDF file: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
