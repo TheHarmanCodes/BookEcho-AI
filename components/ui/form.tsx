@@ -46,10 +46,7 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
 
-function FormItem({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const id = React.useId();
 
   return (
@@ -82,10 +79,7 @@ function useFormField() {
   };
 }
 
-function FormLabel({
-  className,
-  ...props
-}: React.ComponentProps<"label">) {
+function FormLabel({ className, ...props }: React.ComponentProps<"label">) {
   const { error, formItemId } = useFormField();
 
   return (
@@ -97,10 +91,7 @@ function FormLabel({
   );
 }
 
-function FormControl({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function FormControl({ className, ...props }: React.ComponentProps<"div">) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
 
@@ -115,10 +106,7 @@ function FormControl({
   );
 }
 
-function FormDescription({
-  className,
-  ...props
-}: React.ComponentProps<"p">) {
+function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
   const { formDescriptionId } = useFormField();
 
   return (

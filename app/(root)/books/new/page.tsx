@@ -1,4 +1,4 @@
-import UploadForm from "@/components/ui/UploadFrom";
+import UploadForm from "@/components/UploadForm";
 
 const Page = () => {
   return (

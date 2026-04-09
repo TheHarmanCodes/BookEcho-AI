@@ -668,7 +668,7 @@
     @apply relative bg-white rounded-[14px] overflow-hidden flex items-center justify-center h-[205px] md:h-[240px];
   }
   .book-card-cover {
-    @apply w-auto h-[170px] md:h-[200px] object-cover rounded-lg;
+    @apply w-full h-full object-cover rounded-lg px-6 py-2;
     box-shadow: var(--shadow-book);
   }
   .book-card-meta {

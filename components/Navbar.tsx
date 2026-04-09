@@ -22,8 +22,9 @@ const Navbar = () => {
           <Image
             src="/assets/logo.png"
             alt="Bookified"
-            width={42}
-            height={26}
+            width={58}
+            height={57}
+            className="brightness-100 contrast-100 mt-1"
           />
           <span className="logo-text">BookEcho</span>
         </Link>
