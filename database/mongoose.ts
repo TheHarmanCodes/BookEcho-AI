@@ -39,7 +39,6 @@ export const connectToDatabase = async () => {
     console.error(
       "MongoDB connection error. Please make sure MongoDB is running.",
     );
-
     throw err;
   }
 
