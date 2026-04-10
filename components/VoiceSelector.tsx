@@ -18,7 +18,6 @@ const VoiceSelector = ({ value, onChange, disabled }: VoiceSelectorProps) => {
       value={value}
       onValueChange={onChange}
       className="space-y-6 font-sans"
-      disabled={disabled}
     >
       {(
         Object.keys(voiceCategories) as Array<keyof typeof voiceCategories>
@@ -50,6 +49,7 @@ const VoiceSelector = ({ value, onChange, disabled }: VoiceSelectorProps) => {
                   <RadioGroupItem
                     value={voiceKey}
                     id={voiceKey}
+                    disabled={disabled}
                     className="mt-0.5 shrink-0"
                   />
                   <div className="space-y-1 flex-1">
