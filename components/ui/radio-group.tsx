@@ -16,7 +16,6 @@ function RadioGroup({
   className,
   value,
   onValueChange,
-  name,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -29,11 +28,7 @@ function RadioGroup({
     <RadioGroupContext.Provider
       value={{ value, onValueChange, name: name ?? generatedName }}
     >
-      <div
-        role="radiogroup"
-        className={cn("grid gap-3", className)}
-        {...props}
-      >
+      <div role="radiogroup" className={cn("grid gap-3", className)} {...props}>
         {children}
       </div>
     </RadioGroupContext.Provider>
@@ -61,7 +56,7 @@ function RadioGroupItem({
       onChange={() => group.onValueChange?.(value)}
       value={value}
       className={cn(
-        "size-4 border border-[var(--border-medium)] text-[var(--color-brand)] accent-[var(--color-brand)]",
+        "size-4 border border-(--border-medium) text-(--color-brand) accent-(--color-brand)",
         className,
       )}
       {...props}
