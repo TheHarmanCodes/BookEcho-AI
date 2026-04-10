@@ -123,7 +123,6 @@ export type FileDropzoneProps = {
   onFileChange: (file?: File) => void;
 };
 
-//check them why they are not accessible
 export const voiceGroupLabels = {
   male: "Male Voices",
   female: "Female Voices",
@@ -134,3 +133,25 @@ export const submitButtonStyle = {
   color: "#fff",
   fontFamily: '"IBM Plex Serif", serif',
 } as const;
+
+export interface SessionCheckResult {
+  allowed: boolean;
+  currentCount: number;
+  limit: number;
+  plan: PlanType;
+  maxDurationMinutes: number;
+  error?: string;
+}
+
+export interface StartSessionResult {
+  success: boolean;
+  sessionId?: string;
+  maxDurationMinutes?: number;
+  error?: string;
+  isBillingError?: boolean;
+}
+
+export interface EndSessionResult {
+  success: boolean;
+  error?: string;
+}
