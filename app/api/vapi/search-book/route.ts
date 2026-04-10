@@ -51,15 +51,15 @@ function parseArgs(args: unknown): Record<string, unknown> {
       return {};
     }
   }
+  if (typeof args !== "object" || Array.isArray(args)) {
+    return {};
+  }
   return args as Record<string, unknown>;
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    // Log printing *Remove
-    console.log("Vapi search-book request:", JSON.stringify(body, null, 2));
 
     // Support multiple Vapi formats
     const functionCall = body?.message?.functionCall;

@@ -284,6 +284,10 @@ export function useVapi(book: IBook) {
       }
 
       sessionIdRef.current = result.sessionId || null;
+      if (!sessionIdRef.current) {
+        console.warn("Voice session started without session tracking ID");
+      }
+
       // Note: Server-returned maxDurationMinutes is informational only
       // The actual limit is enforced by useLatestRef(limits.maxSessionMinutes * 60)
 
