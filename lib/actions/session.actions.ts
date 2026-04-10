@@ -19,7 +19,7 @@ export const startVoiceSession = async (
       bookId, // which book the user talking about
       startedAt: new Date(), // when user started that
       billingPeriodStart: getCurrentBillingPeriodStart(), //billing period started At
-      duration: 0, // seconds
+      durationSeconds: 0, // seconds
     });
 
     return {

@@ -50,6 +50,9 @@ const Transcript = ({
   return (
     <div
       ref={scrollRef}
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions text"
       className="transcript-messages overflow-y-auto pr-2 flex-1"
     >
       {messages.map((message, index) => (
