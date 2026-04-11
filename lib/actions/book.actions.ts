@@ -6,6 +6,7 @@ import { escapeRegex, generateSlug, serializeData } from "../utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
 import mongoose from "mongoose";
+import { revalidatePath } from "next/cache";
 
 export const getAllBooks = async () => {
   try {
@@ -72,6 +73,8 @@ export const createBook = async (data: CreateBook) => {
     // Pending: Checking subscription limits before creating new book
 
     const book = await Book.create({ ...data, slug, totalSegments: 0 });
+
+    revalidatePath("/");
 
     return {
       success: true,
