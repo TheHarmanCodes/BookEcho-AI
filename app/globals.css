@@ -501,6 +501,7 @@
   .library-hero-title {
     @apply text-[26px] md:text-3xl lg:text-4xl font-semibold text-black tracking-[-0.02em] leading-8 md:leading-[42px] font-serif;
   }
+
   .library-hero-description {
     @apply text-sm md:text-base text-[#3d485e] leading-5 md:leading-6;
   }

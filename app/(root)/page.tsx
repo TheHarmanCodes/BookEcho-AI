@@ -12,6 +12,9 @@ const Page = async () => {
     <main className="wrapper container">
       <HeroSection />
 
+      <h1 className="text-[19px] md:text-xl lg:text-2xl  text-black tracking-[-0.02em] leading-8 md:leading-10.5 font-medium lg:mb-4">
+        Recent Books
+      </h1>
       <div className="library-books-grid">
         {books.map((book) => (
           <BookCard
