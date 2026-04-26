@@ -21,23 +21,23 @@ const VapiControls = ({ book }: { book: IBook }) => {
     start,
     stop,
     clearError,
-    // limitError,
-    // isBillingError,
-    // maxDurationSeconds,
+    limitError,
+    isBillingError,
+    maxDurationSeconds,
   } = useVapi(book);
   const router = useRouter();
 
-  //   useEffect(() => {
-  //     if (limitError) {
-  //       toast.error(limitError);
-  //       if (isBillingError) {
-  //         router.push("/subscriptions");
-  //       } else {
-  //         router.push("/");
-  //       }
-  //       clearError();
-  //     }
-  //   }, [isBillingError, limitError, router, clearError]);
+  useEffect(() => {
+    if (limitError) {
+      toast.error(limitError);
+      if (isBillingError) {
+        router.push("/subscriptions");
+      } else {
+        router.push("/");
+      }
+      clearError();
+    }
+  }, [isBillingError, limitError, router, clearError]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -85,6 +85,12 @@ const VapiControls = ({ book }: { book: IBook }) => {
               <button
                 onClick={isActive ? stop : start}
                 disabled={status === "connecting"}
+                aria-label={
+                  isActive ? "Stop voice assistant" : "Start voice assistant"
+                }
+                title={
+                  isActive ? "Stop voice assistant" : "Start voice assistant"
+                }
                 className={`vapi-mic-btn shadow-md w-15! h-15! z-10 ${isActive ? "vapi-mic-btn-active" : "vapi-mic-btn-inactive"}`}
               >
                 {isActive ? (
@@ -118,8 +124,8 @@ const VapiControls = ({ book }: { book: IBook }) => {
 
               <div className="vapi-status-indicator">
                 <span className="vapi-status-text">
-                  {formatDuration(duration)}/{formatDuration(15)}
-                  {/* {formatDuration(maxDurationSeconds)} */}
+                  {formatDuration(duration)}/
+                  {formatDuration(maxDurationSeconds)}
                 </span>
               </div>
             </div>

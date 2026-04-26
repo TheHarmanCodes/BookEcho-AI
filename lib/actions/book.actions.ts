@@ -2,11 +2,17 @@
 
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
-import { escapeRegex, generateSlug, serializeData } from "../utils";
+import {
+  escapeRegex,
+  excludeIndexSegments,
+  generateSlug,
+  serializeData,
+} from "../utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
 import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
+import {getUserPlan} from "@/lib/subscription.server";
 
 export const getAllBooks = async () => {
   try {
@@ -70,8 +76,32 @@ export const createBook = async (data: CreateBook) => {
       };
     }
 
-    // Pending: Checking subscription limits before creating new book
+    // TOTO: Checking subscription limits before creating new book (completed)
+    const { getUserPlan } = await import("@/lib/subscription.server");
+    const { PLAN_LIMITS } = await import("@/lib/subscription-constants");
 
+    const { auth } = await import("@clerk/nextjs/server");
+    const { userId } = await auth();
+
+    if (!userId || userId !== data.clerkId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const plan = await getUserPlan();
+    const limits = PLAN_LIMITS[plan];
+
+    const bookCount = await Book.countDocuments({ clerkId: userId });
+
+    if (bookCount >= limits.maxBooks) {
+      const { revalidatePath } = await import("next/cache");
+      revalidatePath("/");
+
+      return {
+        success: false,
+        error: `You have reached the maximum number of books allowed for your ${plan} plan (${limits.maxBooks}). Please upgrade to add more books.`,
+        isBillingError: true,
+      };
+    }
     const book = await Book.create({ ...data, slug, totalSegments: 0 });
 
     revalidatePath("/");
@@ -98,7 +128,8 @@ export const saveBookSegments = async (
     await connectToDatabase();
 
     console.log("Saving book segments...");
-    const segmentsToInsert = segments.map(
+    const filteredSegments = excludeIndexSegments(segments);
+    const segmentsToInsert = filteredSegments.map(
       ({ text, segmentIndex, pageNumber, wordCount }) => ({
         clerkId,
         bookId,
@@ -110,11 +141,13 @@ export const saveBookSegments = async (
     );
 
     await BookSegment.insertMany(segmentsToInsert);
-    await Book.findByIdAndUpdate(bookId, { totalSegments: segments.length });
+    await Book.findByIdAndUpdate(bookId, {
+      totalSegments: filteredSegments.length,
+    });
     console.log("Book segments saved successfully");
     return {
       success: true,
-      data: { segmentsCreated: segments.length },
+      data: { segmentsCreated: filteredSegments.length },
     };
   } catch (err) {
     console.error("Error saving book segments: " + err);
