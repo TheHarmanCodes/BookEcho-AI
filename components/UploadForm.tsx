@@ -31,6 +31,7 @@ import {
 import { useRouter } from "next/navigation";
 import { parsePDFFile } from "@/lib/utils";
 import { upload } from "@vercel/blob/client";
+import { del } from "@vercel/blob";
 
 const UploadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,8 +132,10 @@ const UploadForm = () => {
         fileSize: pdfFile.size,
       });
 
-      if(!book.success) {
-        toast.error(book.error as string || "Failed to create book");
+      if (!book.success) {
+        // Clean up orphaned blobs
+        await del([uploadPdfBlob.url, coverUrl]).catch(console.error);
+        toast.error((book.error as string) || "Failed to create book");
         if (book.isBillingError) {
           router.push("/subscriptions");
         }
@@ -142,8 +145,8 @@ const UploadForm = () => {
       if (book.alreadyExists) {
         toast.info("Book with same title already exists.");
         form.reset();
-        // router.push(`/books/${book.data.slug}`);
-        router.push(`/books/${existsCheck.book.slug}`)
+        //router.push(`/books/${existsCheck.book.slug}`);
+        router.push(`/books/${book.data.slug}`);
         return;
       }
 

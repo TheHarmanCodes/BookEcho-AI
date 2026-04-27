@@ -33,11 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# mcp files
-.ai 
-
 # vercel
 .vercel
+
+#mcp files
+.ai
 
 # typescript
 *.tsbuildinfo

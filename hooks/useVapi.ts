@@ -98,6 +98,12 @@ export function useVapi(book: IBook) {
             // Check duration limit
             if (newDuration >= maxDurationRef.current) {
               getVapi().stop();
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+              setIsBillingError(true);
+
               setLimitError(
                 `Session time limit (${Math.floor(
                   maxDurationRef.current / SECONDS_PER_MINUTE,
@@ -316,11 +322,12 @@ export function useVapi(book: IBook) {
       console.error("Failed to start call:", err);
       if (sessionIdRef.current) {
         endVoiceSession(sessionIdRef.current, 0).catch((endErr) => {
-          console.log(
-            "Failed to rollback voic session after start failure: ",
+          console.error(
+            "Failed to rollback voice session after start failure:",
             endErr,
           );
         });
+        sessionIdRef.current = null;
       }
       setStatus("idle");
       setLimitError("Failed to start voice session. Please try again.");

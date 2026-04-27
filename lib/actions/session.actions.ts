@@ -3,7 +3,12 @@
 import VoiceSession from "@/database/models/voice-session.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { EndSessionResult, StartSessionResult } from "@/types";
-import { getCurrentBillingPeriodStart } from "../subscription-constants";
+import {
+  PLAN_LIMITS,
+  getCurrentBillingPeriodStart,
+} from "../subscription-constants";
+import { getUserPlan } from "@/lib/subscription.server";
+import { revalidatePath } from "next/cache";
 
 export const startVoiceSession = async (
   clerkId: string,
@@ -13,20 +18,15 @@ export const startVoiceSession = async (
     await connectToDatabase();
 
     //Limits / Plan to see weather a session is allowed.
-    const { getUserPlan } = await import("@/lib/subscription.server");
-    const { PLAN_LIMITS, getCurrentBillingPeriodStart } = await import("@/lib/subscription-constants");
-
     const plan = await getUserPlan();
     const limits = PLAN_LIMITS[plan];
     const billingPeriodStart = getCurrentBillingPeriodStart();
-
     const sessionCount = await VoiceSession.countDocuments({
       clerkId,
-      billingPeriodStart
+      billingPeriodStart,
     });
 
     if (sessionCount >= limits.maxSessionsPerMonth) {
-      const { revalidatePath } = await import("next/cache");
       revalidatePath("/");
 
       return {
@@ -40,7 +40,7 @@ export const startVoiceSession = async (
       clerkId, // who is the user
       bookId, // which book the user talking about
       startedAt: new Date(), // when user started that
-      billingPeriodStart,//billing period started At
+      billingPeriodStart, //billing period started At
       durationSeconds: 0, // seconds
     });
 

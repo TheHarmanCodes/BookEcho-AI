@@ -12,7 +12,7 @@ export default function SubscriptionsPage() {
         <div className="mt-4">
           <UpgradeBanner
             buttonText="Upgrade to Pro"
-            description="go beyond limits with unlimited sessions and full session memory"
+            description="Go beyond limits with unlimited sessions and full session memory"
           />
         </div>
       </div>

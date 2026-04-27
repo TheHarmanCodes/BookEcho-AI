@@ -12,7 +12,9 @@ import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
 import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
-import {getUserPlan} from "@/lib/subscription.server";
+import { getUserPlan } from "@/lib/subscription.server";
+import { PLAN_LIMITS } from "@/lib/subscription-constants";
+import { auth } from "@clerk/nextjs/server";
 
 export const getAllBooks = async () => {
   try {
@@ -62,7 +64,10 @@ export const checkBookExists = async (title: string) => {
 export const createBook = async (data: CreateBook) => {
   try {
     await connectToDatabase();
-
+    const { userId } = await auth();
+    if (!userId || userId !== data.clerkId) {
+      return { success: false, error: "Unauthorized" };
+    }
     // this slug will be used as a variable during routing...
     const slug = generateSlug(data.title);
     //checking for conflicts
@@ -76,26 +81,15 @@ export const createBook = async (data: CreateBook) => {
       };
     }
 
-    // TOTO: Checking subscription limits before creating new book (completed)
-    const { getUserPlan } = await import("@/lib/subscription.server");
-    const { PLAN_LIMITS } = await import("@/lib/subscription-constants");
-
-    const { auth } = await import("@clerk/nextjs/server");
-    const { userId } = await auth();
-
-    if (!userId || userId !== data.clerkId) {
-      return { success: false, error: "Unauthorized" };
-    }
-
     const plan = await getUserPlan();
     const limits = PLAN_LIMITS[plan];
-
+    if (!limits) {
+      console.error(`Unknown plan type: ${plan}`);
+      return { success: false, error: "Unable to verify subscription limits" };
+    }
     const bookCount = await Book.countDocuments({ clerkId: userId });
 
     if (bookCount >= limits.maxBooks) {
-      const { revalidatePath } = await import("next/cache");
-      revalidatePath("/");
-
       return {
         success: false,
         error: `You have reached the maximum number of books allowed for your ${plan} plan (${limits.maxBooks}). Please upgrade to add more books.`,

@@ -4,7 +4,7 @@ import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { LucideIcon } from "lucide-react";
 import z from "zod";
 import { UploadSchema } from "@/lib/zod";
-import { PlanType } from "@/lib/plans";
+import { PlanType } from "@/lib/subscription-constants";
 
 // DATABASE MODELS
 export interface IBook extends Document {
@@ -135,7 +135,6 @@ export const submitButtonStyle = {
   fontFamily: '"IBM Plex Serif", serif',
 } as const;
 
-import {PLANS, PlanType} from "@/lib/subscription-constants";
 export interface SessionCheckResult {
   allowed: boolean;
   currentCount: number;

@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  Variants,
+  TargetAndTransition,
+} from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface UpgradeBannerProps {
@@ -40,9 +45,9 @@ export function UpgradeBanner({
 }: UpgradeBannerProps) {
   const [isHovered, setIsHovered] = React.useState(false);
 
-  const iconVariants = {
+  const iconVariants: Variants = {
     hidden: { x: 0, y: 0, opacity: 0, rotate: 0 },
-    visible: (custom: { x: number; y: number }) => ({
+    visible: (custom: { x: number; y: number }): TargetAndTransition => ({
       x: custom.x,
       y: custom.y,
       opacity: 1,
@@ -90,9 +95,12 @@ export function UpgradeBanner({
           </motion.div>
           <div className="relative flex h-[35px] items-center gap-1 rounded-[6px] border border-[#fffb82] bg-[#feffe6] pl-2.5 pr-1 text-sm dark:border-[#fff959] dark:bg-[#06193A]">
             <button
+              type="button"
               className="focus-visible:shadow-focus-ring rounded-xs my-[-1px] cursor-pointer border-none bg-transparent px-0 py-1 font-sans text-[13px] font-medium text-[#002359] underline decoration-[#CAE7FF] underline-offset-[5px] outline-none hover:text-[#ff930f] hover:decoration-[#94CCFF] focus-visible:!shadow-[#008FFF] dark:text-[#EAF5FF] dark:decoration-[#003674] dark:hover:text-[#44A7FF] dark:hover:decoration-[#00408A]"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
+              onFocus={() => setIsHovered(true)}
+              onBlur={() => setIsHovered(false)}
               onClick={onClick}
             >
               {buttonText}
@@ -103,6 +111,8 @@ export function UpgradeBanner({
             {onClose && (
               <button
                 onClick={onClose}
+                type="button"
+                aria-label="Dismiss"
                 className="m-0 flex h-6 !w-6 shrink-0 cursor-pointer items-center justify-center rounded-[4px] border-0 bg-transparent p-0 text-[#ff930f] hover:bg-[#CAE7FF] dark:hover:bg-[#012F61]"
               >
                 <X size={16} className="text-[#ff930f] dark:text-[#47A8FF]" />
