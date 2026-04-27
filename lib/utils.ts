@@ -67,6 +67,33 @@ export const splitIntoSegments = (
   return segments;
 };
 
+export const excludeIndexSegments = (
+  segments: TextSegment[],
+  scanLimit: number = 25,
+  skipCount: number = 10,
+): TextSegment[] => {
+  const headingPattern =
+    /^\s*(?:index|contents?|table\s+of\s+contents|toc|chapter\s+contents|list\s+of\s+(?:figures|tables|illustrations|plates)|illustrations|figures|tables)\b/i;
+
+  const indexStart = segments
+    .slice(0, scanLimit)
+    .findIndex((segment) => headingPattern.test(segment.text.trim()));
+
+  if (indexStart === -1) return segments;
+
+  return segments
+    .filter((_, segmentPosition) => {
+      return (
+        segmentPosition < indexStart ||
+        segmentPosition >= indexStart + skipCount
+      );
+    })
+    .map((segment, segmentIndex) => ({
+      ...segment,
+      segmentIndex,
+    }));
+};
+
 // Get voice data by persona key or voice ID
 export const getVoice = (persona?: string) => {
   if (!persona) return voiceOptions[DEFAULT_VOICE];

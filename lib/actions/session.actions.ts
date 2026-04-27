@@ -3,7 +3,12 @@
 import VoiceSession from "@/database/models/voice-session.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { EndSessionResult, StartSessionResult } from "@/types";
-import { getCurrentBillingPeriodStart } from "../subscription-constants";
+import {
+  PLAN_LIMITS,
+  getCurrentBillingPeriodStart,
+} from "../subscription-constants";
+import { getUserPlan } from "@/lib/subscription.server";
+import { revalidatePath } from "next/cache";
 
 export const startVoiceSession = async (
   clerkId: string,
@@ -13,19 +18,36 @@ export const startVoiceSession = async (
     await connectToDatabase();
 
     //Limits / Plan to see weather a session is allowed.
+    const plan = await getUserPlan();
+    const limits = PLAN_LIMITS[plan];
+    const billingPeriodStart = getCurrentBillingPeriodStart();
+    const sessionCount = await VoiceSession.countDocuments({
+      clerkId,
+      billingPeriodStart,
+    });
+
+    if (sessionCount >= limits.maxSessionsPerMonth) {
+      revalidatePath("/");
+
+      return {
+        success: false,
+        error: `You have reached the monthly session limit for your ${plan} plan (${limits.maxSessionsPerMonth}). Please upgrade for more sessions.`,
+        isBillingError: true,
+      };
+    }
 
     const session = await VoiceSession.create({
       clerkId, // who is the user
       bookId, // which book the user talking about
       startedAt: new Date(), // when user started that
-      billingPeriodStart: getCurrentBillingPeriodStart(), //billing period started At
+      billingPeriodStart, //billing period started At
       durationSeconds: 0, // seconds
     });
 
     return {
       success: true,
       sessionId: session._id.toString(),
-      // maxDurationMinutes: check.maxDurationsMinutes Pending....
+      maxDurationMinutes: limits.maxDurationPerSession,
     };
   } catch (err) {
     console.error("Error starting a voice session in session.actions.ts", err);

@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+#mcp files
+.ai
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -44,3 +47,4 @@ next-env.d.ts
 .env.local
 # clerk configuration (can include secrets)
 /.clerk/
+.idea
