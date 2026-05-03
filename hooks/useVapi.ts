@@ -334,7 +334,25 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
       const finalDuration = startTimeRef.current
         ? Math.floor((Date.now() - startTimeRef.current) / TIMER_INTERVAL_MS)
         : 0;
-
+      // Persist any pending partial messages before cleanup
+      const pendingUser = currentUserMessageRef.current.trim();
+      const pendingAssistant = currentMessageRef.current.trim();
+      if (pendingUser) {
+        appendTranscriptMessage(bookIdRef.current, {
+          role: "user",
+          content: pendingUser,
+        }).catch((err) =>
+          console.error("Failed to persist user message on unmount:", err),
+        );
+      }
+      if (pendingAssistant) {
+        appendTranscriptMessage(bookIdRef.current, {
+          role: "assistant",
+          content: pendingAssistant,
+        }).catch((err) =>
+          console.error("Failed to persist assistant message on unmount:", err),
+        );
+      }
       // End active session on unmount
       if (sessionId) {
         getVapi().stop();
