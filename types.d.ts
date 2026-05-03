@@ -47,6 +47,15 @@ export interface IVoiceSession extends Document {
   updatedAt: Date;
 }
 
+export interface ITranscriptHistory extends Document {
+  _id: string;
+  clerkId: string;
+  bookId: Types.ObjectId;
+  messages: Messages[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // FORM & INPUT TYPES
 export type BookUploadFormValues = z.infer<typeof UploadSchema>;
 
@@ -155,4 +164,16 @@ export interface StartSessionResult {
 export interface EndSessionResult {
   success: boolean;
   error?: string;
+}
+
+export interface TranscriptHistoryResult {
+  success: boolean;
+  messages: Messages[];
+  error?: string;
+}
+
+export interface TranscriptMutationResult {
+  success: boolean;
+  error?: string;
+  persisted?: boolean;
 }
