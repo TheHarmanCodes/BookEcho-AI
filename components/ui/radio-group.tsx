@@ -17,10 +17,12 @@ function RadioGroup({
   value,
   onValueChange,
   children,
+  name,
   ...props
 }: React.ComponentProps<"div"> & {
   value?: string;
   onValueChange?: (value: string) => void;
+  name?: string;
 }) {
   const generatedName = React.useId();
 

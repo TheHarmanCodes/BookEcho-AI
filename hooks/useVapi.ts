@@ -80,48 +80,62 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
   const currentUserMessageRef = useLatestRef(currentUserMessage);
   const voice = book.persona || DEFAULT_VOICE;
 
-  const appendMessageIfNew = useCallback((nextMessage: Messages) => {
-    const normalizedContent = nextMessage.content.trim();
-    if (!normalizedContent) {
-      return false;
-    }
+  const appendMessageIfNew = useCallback(
+    (nextMessage: Messages) => {
+      const normalizedContent = nextMessage.content.trim();
+      if (!normalizedContent) {
+        return false;
+      }
 
-    const lastMessage = messagesRef.current[messagesRef.current.length - 1];
-    if (
-      lastMessage?.role === nextMessage.role &&
-      lastMessage?.content === normalizedContent
-    ) {
-      return false;
-    }
+      const lastMessage = messagesRef.current[messagesRef.current.length - 1];
+      if (
+        lastMessage?.role === nextMessage.role &&
+        lastMessage?.content === normalizedContent
+      ) {
+        return false;
+      }
 
-    setMessages((prev) => [
-      ...prev,
-      { role: nextMessage.role, content: normalizedContent },
-    ]);
+      setMessages((prev) => [
+        ...prev,
+        { role: nextMessage.role, content: normalizedContent },
+      ]);
 
-    return true;
-  }, [messagesRef]);
+      return true;
+    },
+    [messagesRef],
+  );
 
-  const persistTranscriptMessage = useCallback((message: Messages) => {
-    appendTranscriptMessage(bookIdRef.current, message).catch((error) => {
-      console.error("Failed to persist transcript message:", error);
-    });
-  }, [bookIdRef]);
+  const persistTranscriptMessage = useCallback(
+    (message: Messages) => {
+      appendTranscriptMessage(bookIdRef.current, message).catch((error) => {
+        console.error("Failed to persist transcript message:", error);
+      });
+    },
+    [bookIdRef],
+  );
 
   const flushPendingTranscript = useCallback(() => {
+    const pendingUserMessage = currentUserMessageRef.current.trim();
+    const pendingAssistantMessage = currentMessageRef.current.trim();
+
+    currentUserMessageRef.current = "";
+    currentMessageRef.current = "";
+    setCurrentUserMessage("");
+    setCurrentMessage("");
+
     const pendingMessages: Messages[] = [];
 
-    if (currentUserMessageRef.current.trim()) {
+    if (pendingUserMessage) {
       pendingMessages.push({
         role: "user",
-        content: currentUserMessageRef.current,
+        content: pendingUserMessage,
       });
     }
 
-    if (currentMessageRef.current.trim()) {
+    if (pendingAssistantMessage) {
       pendingMessages.push({
         role: "assistant",
-        content: currentMessageRef.current,
+        content: pendingAssistantMessage,
       });
     }
 
@@ -324,9 +338,8 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
       // End active session on unmount
       if (sessionId) {
         getVapi().stop();
-        endVoiceSession(sessionId, finalDuration).catch(
-          (err) =>
-            console.error("Failed to end voice session on unmount:", err),
+        endVoiceSession(sessionId, finalDuration).catch((err) =>
+          console.error("Failed to end voice session on unmount:", err),
         );
         sessionIdRef.current = null;
       }
