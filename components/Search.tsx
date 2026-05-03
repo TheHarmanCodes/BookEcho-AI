@@ -22,7 +22,7 @@ const Search = () => {
         params.delete("query");
       }
 
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
@@ -36,7 +36,7 @@ const Search = () => {
       <Input
         type="text"
         placeholder="Search books by title or author"
-        className="library-search-input border-none shadow-none focus-visible:ring-0"
+        className="library-search-input bg-white! border-none shadow-none focus-visible:ring-0"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
