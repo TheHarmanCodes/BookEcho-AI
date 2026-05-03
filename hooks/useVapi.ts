@@ -14,6 +14,7 @@ import {
   startVoiceSession,
   endVoiceSession,
 } from "@/lib/actions/session.actions";
+import { appendTranscriptMessage } from "@/lib/actions/transcript.actions";
 
 export function useLatestRef<T>(value: T) {
   const ref = useRef(value);
@@ -28,7 +29,6 @@ export function useLatestRef<T>(value: T) {
 const VAPI_API_KEY = process.env.NEXT_PUBLIC_VAPI_API_KEY;
 const TIMER_INTERVAL_MS = 1000;
 const SECONDS_PER_MINUTE = 60;
-const TIME_WARNING_THRESHOLD = 60; // Show warning when this many seconds remain
 
 let vapi: InstanceType<typeof Vapi>;
 function getVapi() {
@@ -51,12 +51,12 @@ export type CallStatus =
   | "thinking"
   | "speaking";
 
-export function useVapi(book: IBook) {
+export function useVapi(book: IBook, initialMessages: Messages[] = []) {
   const { userId } = useAuth();
   const { limits } = useSubscription();
 
   const [status, setStatus] = useState<CallStatus>("idle");
-  const [messages, setMessages] = useState<Messages[]>([]);
+  const [messages, setMessages] = useState<Messages[]>(() => initialMessages);
   const [currentMessage, setCurrentMessage] = useState("");
   const [currentUserMessage, setCurrentUserMessage] = useState("");
   const [duration, setDuration] = useState(0);
@@ -73,8 +73,70 @@ export function useVapi(book: IBook) {
     ? limits.maxDurationPerSession * 60
     : 15 * 60;
   const maxDurationRef = useLatestRef(maxDurationSeconds);
+  const messagesRef = useLatestRef(messages);
+  const bookIdRef = useLatestRef(book._id);
   const durationRef = useLatestRef(duration);
+  const currentMessageRef = useLatestRef(currentMessage);
+  const currentUserMessageRef = useLatestRef(currentUserMessage);
   const voice = book.persona || DEFAULT_VOICE;
+
+  const appendMessageIfNew = useCallback((nextMessage: Messages) => {
+    const normalizedContent = nextMessage.content.trim();
+    if (!normalizedContent) {
+      return false;
+    }
+
+    const lastMessage = messagesRef.current[messagesRef.current.length - 1];
+    if (
+      lastMessage?.role === nextMessage.role &&
+      lastMessage?.content === normalizedContent
+    ) {
+      return false;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      { role: nextMessage.role, content: normalizedContent },
+    ]);
+
+    return true;
+  }, [messagesRef]);
+
+  const persistTranscriptMessage = useCallback((message: Messages) => {
+    appendTranscriptMessage(bookIdRef.current, message).catch((error) => {
+      console.error("Failed to persist transcript message:", error);
+    });
+  }, [bookIdRef]);
+
+  const flushPendingTranscript = useCallback(() => {
+    const pendingMessages: Messages[] = [];
+
+    if (currentUserMessageRef.current.trim()) {
+      pendingMessages.push({
+        role: "user",
+        content: currentUserMessageRef.current,
+      });
+    }
+
+    if (currentMessageRef.current.trim()) {
+      pendingMessages.push({
+        role: "assistant",
+        content: currentMessageRef.current,
+      });
+    }
+
+    pendingMessages.forEach((message) => {
+      const wasAdded = appendMessageIfNew(message);
+      if (wasAdded) {
+        persistTranscriptMessage(message);
+      }
+    });
+  }, [
+    appendMessageIfNew,
+    currentMessageRef,
+    currentUserMessageRef,
+    persistTranscriptMessage,
+  ]);
 
   // Set up Vapi event listeners
   useEffect(() => {
@@ -115,6 +177,8 @@ export function useVapi(book: IBook) {
       },
 
       "call-end": () => {
+        flushPendingTranscript();
+
         // Don't reset isStoppingRef here - delayed events may still fire
         setStatus("idle");
         setCurrentMessage("");
@@ -185,20 +249,21 @@ export function useVapi(book: IBook) {
           if (message.role === "assistant") setCurrentMessage("");
           if (message.role === "user") setCurrentUserMessage("");
 
-          setMessages((prev) => {
-            const isDupe = prev.some(
-              (m) =>
-                m.role === message.role && m.content === message.transcript,
-            );
-            return isDupe
-              ? prev
-              : [...prev, { role: message.role, content: message.transcript }];
-          });
+          const nextMessage = {
+            role: message.role,
+            content: message.transcript,
+          };
+          const wasAdded = appendMessageIfNew(nextMessage);
+          if (wasAdded) {
+            persistTranscriptMessage(nextMessage);
+          }
         }
       },
 
       error: (error: Error) => {
         console.error("Vapi error:", error);
+        flushPendingTranscript();
+
         // Don't reset isStoppingRef here - delayed events may still fire
         setStatus("idle");
         setCurrentMessage("");
@@ -251,10 +316,15 @@ export function useVapi(book: IBook) {
     });
 
     return () => {
+      const sessionId = sessionIdRef.current;
+      const finalDuration = startTimeRef.current
+        ? Math.floor((Date.now() - startTimeRef.current) / TIMER_INTERVAL_MS)
+        : 0;
+
       // End active session on unmount
-      if (sessionIdRef.current) {
+      if (sessionId) {
         getVapi().stop();
-        endVoiceSession(sessionIdRef.current, durationRef.current).catch(
+        endVoiceSession(sessionId, finalDuration).catch(
           (err) =>
             console.error("Failed to end voice session on unmount:", err),
         );
@@ -266,7 +336,17 @@ export function useVapi(book: IBook) {
       });
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [
+    appendMessageIfNew,
+    bookIdRef,
+    currentMessageRef,
+    currentUserMessageRef,
+    durationRef,
+    flushPendingTranscript,
+    maxDurationRef,
+    messagesRef,
+    persistTranscriptMessage,
+  ]);
 
   const start = useCallback(async () => {
     if (!userId) {
@@ -336,12 +416,19 @@ export function useVapi(book: IBook) {
 
   const stop = useCallback(() => {
     isStoppingRef.current = true;
+    flushPendingTranscript();
     getVapi().stop();
-  }, []);
+  }, [flushPendingTranscript]);
 
   const clearError = useCallback(() => {
     setLimitError(null);
     setIsBillingError(false);
+  }, []);
+
+  const clearTranscript = useCallback(() => {
+    setMessages([]);
+    setCurrentMessage("");
+    setCurrentUserMessage("");
   }, []);
 
   const isActive =
@@ -369,6 +456,7 @@ export function useVapi(book: IBook) {
     isBillingError,
     maxDurationSeconds,
     clearError,
+    clearTranscript,
     // maxDurationSeconds,
     // remainingSeconds,
     // showTimeWarning,

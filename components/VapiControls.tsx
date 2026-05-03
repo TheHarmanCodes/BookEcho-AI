@@ -1,16 +1,25 @@
 "use client";
 
-import { Mic, MicOff } from "lucide-react";
+import { Loader2, Mic, MicOff, Trash2 } from "lucide-react";
 import useVapi from "@/hooks/useVapi";
-import { IBook } from "@/types";
+import { IBook, Messages } from "@/types";
 import Image from "next/image";
 import Transcript from "@/components/Transcript";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { clearTranscriptHistory } from "@/lib/actions/transcript.actions";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const VapiControls = ({ book }: { book: IBook }) => {
+const VapiControls = ({
+  book,
+  initialMessages,
+}: {
+  book: IBook;
+  initialMessages: Messages[];
+}) => {
+  const [isClearingTranscript, setIsClearingTranscript] = useState(false);
   const {
     status,
     isActive,
@@ -21,10 +30,11 @@ const VapiControls = ({ book }: { book: IBook }) => {
     start,
     stop,
     clearError,
+    clearTranscript,
     limitError,
     isBillingError,
     maxDurationSeconds,
-  } = useVapi(book);
+  } = useVapi(book, initialMessages);
   const router = useRouter();
 
   useEffect(() => {
@@ -61,6 +71,29 @@ const VapiControls = ({ book }: { book: IBook }) => {
   };
 
   const statusDisplay = getStatusDisplay();
+  const hasTranscript =
+    messages.length > 0 || !!currentMessage || !!currentUserMessage;
+
+  const handleClearTranscript = async () => {
+    setIsClearingTranscript(true);
+
+    try {
+      const result = await clearTranscriptHistory(book._id);
+
+      if (!result.success) {
+        toast.error(result.error || "Failed to clear transcript history.");
+        return;
+      }
+
+      clearTranscript();
+      toast.success("Transcript cleared.");
+    } catch (error) {
+      console.error("Failed to clear transcript:", error);
+      toast.error("Failed to clear transcript history.");
+    } finally {
+      setIsClearingTranscript(false);
+    }
+  };
 
   return (
     <>
@@ -132,6 +165,25 @@ const VapiControls = ({ book }: { book: IBook }) => {
 
         <div className="vapi-transcript-wrapper">
           <div className="transcript-container min-h-100">
+            {hasTranscript && (
+              <div className="flex items-center justify-end px-4 pt-4 sm:px-6 sm:pt-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearTranscript}
+                  disabled={isClearingTranscript}
+                  className="text-[#663820] hover:text-[#4d2a18]"
+                >
+                  {isClearingTranscript ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                  Clear transcript
+                </Button>
+              </div>
+            )}
             <Transcript
               messages={messages}
               currentMessage={currentMessage}

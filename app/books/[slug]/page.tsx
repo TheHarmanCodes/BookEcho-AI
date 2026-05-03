@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { getBookBySlug } from "@/lib/actions/book.actions";
+import { getTranscriptHistory } from "@/lib/actions/transcript.actions";
 import VapiControls from "@/components/VapiControls";
 
 export default async function BookDetailsPage({
@@ -25,6 +26,10 @@ export default async function BookDetailsPage({
   }
 
   const book = result.data;
+  const transcriptResult = await getTranscriptHistory(book._id);
+  const initialMessages = transcriptResult.success
+    ? transcriptResult.messages
+    : [];
 
   return (
     <div className="book-page-container">
@@ -32,7 +37,7 @@ export default async function BookDetailsPage({
         <ArrowLeft className="size-6 text-[#212a3b]" />
       </Link>
 
-      <VapiControls book={book} />
+      <VapiControls book={book} initialMessages={initialMessages} />
     </div>
   );
 }

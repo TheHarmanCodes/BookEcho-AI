@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImageIcon, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -35,13 +35,8 @@ import { del } from "@vercel/blob";
 
 const UploadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const { userId } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const form = useForm<BookUploadFormValues>({
     resolver: zodResolver(UploadSchema),
@@ -169,8 +164,6 @@ const UploadForm = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (!isMounted) return null;
 
   return (
     <>
