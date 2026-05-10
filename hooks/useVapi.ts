@@ -488,7 +488,6 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
     maxDurationSeconds,
     clearError,
     clearTranscript,
-    // maxDurationSeconds,
     // remainingSeconds,
     // showTimeWarning,
   };

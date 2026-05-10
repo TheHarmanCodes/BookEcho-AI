@@ -19,10 +19,12 @@ export const useSubscription = () => {
 
   let plan: PlanType = PLANS.FREE;
 
-  // 1. First Check: Clerk's `has` helper from useAuth
-  if (has?.({ role: "pro" })) {
+  // 1. First check Clerk entitlements from useAuth.
+  // double check for subscription access as `plan` rather than `role`,
+  // so the client hook needs to mirror the server-side checks
+  if (has?.({ role: "pro" }) || has?.({ plan: "pro" })) {
     plan = PLANS.PRO;
-  } else if (has?.({ role: "standard" })) {
+  } else if (has?.({ role: "standard" }) || has?.({ plan: "standard" })) {
     plan = PLANS.STANDARD;
   }
   // 2. Second Check: Fallback to user public metadata if `has` fails (caching issue)
