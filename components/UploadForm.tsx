@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 import { parsePDFFile } from "@/lib/utils";
 import { upload } from "@vercel/blob/client";
 import { del } from "@vercel/blob";
+import { SparklesText } from "./ui/sparkels-text";
 
 const UploadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -258,7 +259,7 @@ const UploadForm = () => {
             />
 
             <Button type="submit" className="form-btn" disabled={isSubmitting}>
-              Begin Synthesis
+              <SparklesText text="Begin Synthesis" />
             </Button>
           </form>
         </Form>

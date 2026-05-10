@@ -18,13 +18,26 @@ import { auth } from "@clerk/nextjs/server";
 
 export const getAllBooks = async (search?: string) => {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return {
+        success: false,
+        error: "Unauthorized",
+        data: [],
+      };
+    }
+
     await connectToDatabase();
-    let query = {};
+    let query: Record<string, unknown> = {
+      clerkId: userId,
+    };
 
     if (search) {
       const escapedSearch = escapeRegex(search);
       const regex = new RegExp(escapedSearch, "i");
       query = {
+        clerkId: userId,
         $or: [{ title: { $regex: regex } }, { author: { $regex: regex } }],
       };
     }
@@ -46,11 +59,21 @@ export const getAllBooks = async (search?: string) => {
 
 export const checkBookExists = async (title: string) => {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return {
+        exists: false,
+        success: false,
+        error: "Unauthorized",
+      };
+    }
+
     await connectToDatabase();
 
     const slug = generateSlug(title);
 
-    const existingBook = await Book.findOne({ slug });
+    const existingBook = await Book.findOne({ slug, clerkId: userId });
 
     if (existingBook) {
       return {
@@ -81,7 +104,10 @@ export const createBook = async (data: CreateBook) => {
     // this slug will be used as a variable during routing...
     const slug = generateSlug(data.title);
     //checking for conflicts
-    const existingBook = await Book.findOne({ slug }).lean();
+    const existingBook = await Book.findOne({
+      slug,
+      clerkId: userId,
+    }).lean();
 
     if (existingBook) {
       return {
@@ -178,9 +204,15 @@ export const saveBookSegments = async (
 
 export const getBookBySlug = async (slug: string) => {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await connectToDatabase();
 
-    const book = await Book.findOne({ slug }).lean();
+    const book = await Book.findOne({ slug, clerkId: userId }).lean();
     if (!book) {
       return { success: false, error: "Book not found" };
     }
