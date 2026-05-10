@@ -24,9 +24,14 @@ const Page = async ({
           <Search />
         </div>
       )}
-      {books.length === 0 && (
+      {bookResults.success && books.length == 0 && (
         <p className="mb-10 text-sm text-gray-600 md:text-base">
           Upload a book to start learning and build your personal library.
+        </p>
+      )}
+      {!bookResults.success && (
+        <p className="mb-10 text-sm text-red-600 md:text-base">
+          We couldn’t load your library right now. Please try again.
         </p>
       )}
 

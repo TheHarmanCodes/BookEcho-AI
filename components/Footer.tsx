@@ -26,7 +26,7 @@ const links = [
 
 const Footer = () => {
   return (
-    <footer className="bg-background border-t py-8">
+    <footer className="bg-background border-t pt-8">
       <div className="wrapper">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row md:gap-8">
           <div className="flex flex-col items-center gap-3 text-center md:flex-row md:text-left">
@@ -61,6 +61,20 @@ const Footer = () => {
             ))}
           </div>
         </div>
+      </div>
+      {/* Large Footer Text */}
+      <div className="relative hidden lg:flex justify-center mt-10 overflow-hidden">
+        {/* Fade Overlay */}
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-background z-10" />
+
+        <h1
+          className="text-[11rem] xl:text-[15rem] font-black leading-none text-transparent whitespace-nowrap select-none"
+          style={{
+            WebkitTextStroke: "2px rgba(241, 181, 24, 0.35)",
+          }}
+        >
+          BookEcho
+        </h1>
       </div>
     </footer>
   );

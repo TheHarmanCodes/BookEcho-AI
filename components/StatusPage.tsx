@@ -49,10 +49,7 @@ const StatusPage = ({
   description,
   badgeLabel = "Something went wrong",
   children,
-  actions = [
-    { label: "Go Home", href: "/", icon: "home" },
-    { label: "Go Back", href: "/", variant: "outline", icon: "back" },
-  ],
+  actions = [{ label: "Go Home", href: "/", icon: "home" }],
   className = "",
 }: StatusPageProps) => {
   return (
@@ -68,7 +65,7 @@ const StatusPage = ({
               </div>
             ) : null}
 
-            <div className="mx-auto flex h-48 w-48 animate-in zoom-in-75 duration-700 items-center justify-center rounded-full border border-primary/10 bg-gradient-to-br from-primary/20 via-background to-primary/5 shadow-soft-lg sm:h-64 sm:w-64 lg:h-80 lg:w-80">
+            <div className="mx-auto flex h-48 w-48 animate-in zoom-in-75 duration-700 items-center justify-center rounded-full border border-primary/10 bg-linear-to-br from-primary/20 via-background to-primary/5 shadow-soft-lg sm:h-64 sm:w-64 lg:h-80 lg:w-80">
               <div className="flex h-[84%] w-[84%] items-center justify-center rounded-full border border-border/50 bg-background/80 shadow-inner">
                 <span className="font-serif text-6xl font-semibold tracking-tighter text-primary/65 sm:text-7xl lg:text-8xl">
                   {code}
@@ -145,4 +142,5 @@ const StatusPage = ({
   );
 };
 
+export type { StatusPageProps, ButtonVariant, StatusPageAction };
 export default StatusPage;
