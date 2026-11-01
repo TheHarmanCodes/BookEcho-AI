@@ -37,7 +37,7 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSerif.variable} ${monaSans.variable} relative font-sans antialiased`}
       >
-        <ClerkProvider ui={ui}>
+        <ClerkProvider ui={ui} signInUrl="/sign-in" signUpUrl="/sign-up">
           <Navbar />
           {children}
           <Toaster />
