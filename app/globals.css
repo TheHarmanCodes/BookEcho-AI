@@ -314,6 +314,29 @@
   /* ===========================================
      NAVBAR COMPONENT
      =========================================== */
+  .navbar-liquid {
+    background: rgba(248, 244, 233, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow:
+      0 4px 30px rgba(0, 0, 0, 0.03),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.6);
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+  .liquid {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow:
+      0 4px 30px rgba(0, 0, 0, 0.03),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.6);
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
   .logo-text {
     @apply font-semibold text-xl hidden sm:block text-black;
   }
@@ -393,7 +416,7 @@
     @apply flex items-center gap-2 bg-[#f3e4c7] rounded-[14px] p-3 mb-3;
   }
   .vapi-transcript-wrapper {
-    @apply min-h-[400px] max-h-[60vh] flex flex-col;
+    @apply min-h-[580px] md:min-h-[660px] max-h-[80vh] flex flex-col;
   }
   .vapi-cover-wrapper {
     @apply relative shrink-0;
@@ -608,7 +631,7 @@
     @apply inline-block w-0.5 h-5 ml-1 bg-black animate-pulse;
   }
   .transcript-empty {
-    @apply flex flex-col items-center justify-center min-h-[350px] text-center flex-1;
+    @apply flex flex-col items-center justify-center min-h-[500px] text-center flex-1;
   }
   .transcript-empty-text {
     @apply text-(--text-primary) text-lg font-bold;

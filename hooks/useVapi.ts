@@ -30,6 +30,28 @@ const VAPI_API_KEY = process.env.NEXT_PUBLIC_VAPI_API_KEY;
 const TIMER_INTERVAL_MS = 1000;
 const SECONDS_PER_MINUTE = 60;
 
+function extractVapiErrorMessage(error: unknown): string {
+  if (!error) return "";
+  if (typeof error === "string") return error;
+  if (typeof error === "object") {
+    const err = error as Record<string, any>;
+    const candidates = [
+      err.error?.message?.message,
+      err.error?.error?.message,
+      err.error?.message,
+      err.message?.message,
+      err.message,
+      err.error,
+    ];
+    for (const c of candidates) {
+      if (typeof c === "string" && c.trim()) {
+        return c.trim();
+      }
+    }
+  }
+  return "";
+}
+
 let vapi: InstanceType<typeof Vapi>;
 function getVapi() {
   if (!vapi) {
@@ -274,7 +296,7 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
         }
       },
 
-      error: (error: Error) => {
+      error: (error: any) => {
         console.error("Vapi error:", error);
         flushPendingTranscript();
 
@@ -299,21 +321,43 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
         }
 
         // Show user-friendly error message
-        const errorMessage = error.message?.toLowerCase() || "";
+        const rawMessage = extractVapiErrorMessage(error);
+        const lower = rawMessage.toLowerCase();
+
         if (
-          errorMessage.includes("timeout") ||
-          errorMessage.includes("silence")
+          lower.includes("wallet") ||
+          lower.includes("credit") ||
+          lower.includes("balance") ||
+          lower.includes("purchase more credits") ||
+          lower.includes("upgrade your plan")
+        ) {
+          setLimitError(
+            "AI Voice service credits exhausted: Your Vapi Wallet Balance is 0. Please purchase more credits or upgrade your plan in your Vapi dashboard to continue voice sessions."
+          );
+        } else if (
+          lower.includes("notallowederror") ||
+          lower.includes("permission") ||
+          lower.includes("microphone")
+        ) {
+          setLimitError(
+            "Microphone permission was denied. Please allow microphone access in your browser to speak with your book."
+          );
+        } else if (
+          lower.includes("timeout") ||
+          lower.includes("silence")
         ) {
           setLimitError(
             "Session ended due to inactivity. Click the mic to start again.",
           );
         } else if (
-          errorMessage.includes("network") ||
-          errorMessage.includes("connection")
+          lower.includes("network") ||
+          lower.includes("connection")
         ) {
           setLimitError(
             "Connection lost. Please check your internet and try again.",
           );
+        } else if (rawMessage) {
+          setLimitError(rawMessage);
         } else {
           setLimitError(
             "Session ended unexpectedly. Click the mic to start again.",
@@ -441,7 +485,31 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
         sessionIdRef.current = null;
       }
       setStatus("idle");
-      setLimitError("Failed to start voice session. Please try again.");
+      const rawMessage = extractVapiErrorMessage(err);
+      const lower = rawMessage.toLowerCase();
+      if (
+        lower.includes("wallet") ||
+        lower.includes("credit") ||
+        lower.includes("balance") ||
+        lower.includes("purchase more credits") ||
+        lower.includes("upgrade your plan")
+      ) {
+        setLimitError(
+          "AI Voice service credits exhausted: Your Vapi Wallet Balance is 0. Please add credits to your Vapi account to proceed with voice conversations."
+        );
+      } else if (
+        lower.includes("notallowederror") ||
+        lower.includes("permission") ||
+        lower.includes("microphone")
+      ) {
+        setLimitError(
+          "Microphone permission was denied. Please allow microphone access in your browser to speak with your book."
+        );
+      } else if (rawMessage) {
+        setLimitError(rawMessage);
+      } else {
+        setLimitError("Failed to start voice session. Please try again.");
+      }
     }
   }, [book._id, book.title, book.author, voice, userId]);
 
@@ -468,12 +536,6 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
     status === "thinking" ||
     status === "speaking";
 
-  // Calculate remaining time
-  // const maxDurationSeconds = limits.maxSessionMinutes * SECONDS_PER_MINUTE;
-  // const remainingSeconds = Math.max(0, maxDurationSeconds - duration);
-  // const showTimeWarning =
-  //     isActive && remainingSeconds <= TIME_WARNING_THRESHOLD && remainingSeconds > 0;
-
   return {
     status,
     isActive,
@@ -488,8 +550,6 @@ export function useVapi(book: IBook, initialMessages: Messages[] = []) {
     maxDurationSeconds,
     clearError,
     clearTranscript,
-    // remainingSeconds,
-    // showTimeWarning,
   };
 }
 

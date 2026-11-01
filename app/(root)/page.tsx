@@ -2,6 +2,7 @@ import HeroSection from "@/components/HeroSection";
 import BookCard from "@/components/BookCard";
 import { getAllBooks } from "@/lib/actions/book.actions";
 import Search from "@/components/Search";
+import EmptyLibraryState from "@/components/EmptyLibraryState";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,8 @@ const Page = async ({
           <Search />
         </div>
       )}
-      {bookResults.success && books.length == 0 && (
-        <p className="mb-10 text-sm text-gray-600 md:text-base">
-          Upload a book to start learning and build your personal library.
-        </p>
+      {bookResults.success && books.length === 0 && (
+        <EmptyLibraryState />
       )}
       {!bookResults.success && (
         <p className="mb-10 text-sm text-red-600 md:text-base">

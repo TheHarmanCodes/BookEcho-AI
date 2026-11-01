@@ -164,7 +164,7 @@ const VapiControls = ({
         </div>
 
         <div className="vapi-transcript-wrapper">
-          <div className="transcript-container min-h-100">
+          <div className="transcript-container min-h-[580px] md:min-h-[660px]">
             {hasTranscript && (
               <div className="flex items-center justify-end px-4 pt-4 sm:px-6 sm:pt-6">
                 <Button
@@ -180,7 +180,7 @@ const VapiControls = ({
                   ) : (
                     <Trash2 className="size-4" />
                   )}
-                  Clear transcript
+                  Clear Transcript
                 </Button>
               </div>
             )}
